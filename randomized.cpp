@@ -41,7 +41,7 @@ amount of solutions to search for, program is closed after (-1 for indefinite)
 // RANGE
 const int LOWERBOUND = 20;
 const int HIGHERBOUND = 25;
-const int AMOUNT = 20;
+const int AMOUNT = 200;
 
 // OUTPUT TO FILE
 const bool OUTPUTTOFILE = true;
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
     //open file
     ifstream textFile("students.txt");
     if (textFile.fail()) {
-    cerr << "Unable to open file for reading." << endl;
+    cerr << "Unable to open file for reading or students.exe does not exist." << endl;
     exit(1);
     }
 
@@ -250,7 +250,7 @@ void printVecConvert(vector<student> students, map<int,string> mapping){
             for (auto it2 = (*it).preferences.begin(); it2 != (*it).preferences.end(); ++it2) { 
                 outputfile << mapping.find((*it2))->second << " ";
             } 
-            outputfile << "}  Individual Score: " << (*it).score << endl;
+            outputfile << "}  Individual Score: \t" << (*it).score << endl;
         }
         outputfile << endl << endl;
     }
@@ -259,7 +259,7 @@ void printVecConvert(vector<student> students, map<int,string> mapping){
         for (auto it2 = (*it).preferences.begin(); it2 != (*it).preferences.end(); ++it2) { 
             cout << mapping.find((*it2))->second << " ";
         } 
-        cout << "}  Individual Score: " << (*it).score << endl;
+        cout << "}  Individual Score: \t" << (*it).score << endl;
     }
     cout << endl << endl;
 }
