@@ -5,6 +5,22 @@ Optimize the seating such that the preferences met as best as possible.
 
 ## Deterministic:
 NP-HARD problem lol.
+### DP-meme
+```
+DP[*][*] = -1;
+DP[{j}][j] = j;
+for i in 0..2^n:
+  s = subset denoted by i
+  if |s| < 2: continue                // we've initialized these already
+  for j in 0..n:
+    if j not in s: continue
+    DP[i][j] = -1;
+    for neighbor in prefd[j]:
+      if neighbor not in s: continue
+      if DP[s \ j][neighbor] >= 0:
+        DP[i][j] = neighbor
+        break;
+```
 
 ## Randomized Solutions:
 ### Simple
