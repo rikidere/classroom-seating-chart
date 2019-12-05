@@ -280,8 +280,7 @@ int getSeatingScore(vector<student> seating){
     //check left edge
     for(auto it = curr.preferences.begin(); it != curr.preferences.end(); ++it){
         if(*it == right.name) {
-            score++;
-            curr.score = 1;
+            score += 1;
         }
     }
     //check non-edge
@@ -289,8 +288,7 @@ int getSeatingScore(vector<student> seating){
         left = seating[i-1];
         curr = seating[i];
         right = seating[i+1];
-        curr.score += getPreferenceScore(left, curr, right);
-        score += curr.score;
+        score += getPreferenceScore(left, curr, right);
     }
     //check right edge
     left = seating[STUDENTS-2];
@@ -298,8 +296,7 @@ int getSeatingScore(vector<student> seating){
 
     for(auto it = curr.preferences.begin(); it != curr.preferences.end(); ++it){
         if(*it == left.name) {
-            score++;
-            curr.score = 1;
+            score += 1;
         } 
     }
     return score;
