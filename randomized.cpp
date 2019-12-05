@@ -1,3 +1,9 @@
+/*
+======================================================================
+Author: rikidere (github)
+Email: eppatric@student.ethz.ch
+======================================================================
+*/
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -9,9 +15,54 @@
 
 using namespace std;
 
-const int SHUFFLES = 5000;
-const int SWAPS = 10000;
+/*
+======================================================================
+NUMBER OF STUDENTS AND PREFERENCES
+======================================================================
+*/
+const int STUDENTS = 20;
+const int PREFERENCES = 3;
+/*
+======================================================================
+PLAY AROUND WITH THESE TO GET BETTER RESULTS
+======================================================================
+*/
+const int SHUFFLES = 2000;
+const int SWAPS = 2000;
+/*
+======================================================================
+PRINT SEATING OPTIONS 
+Note: 
+(LOWERBOUND = INT_MAX or AMOUNT = 0 to ignore)
+lower SHUFFLES x SWAPS is recommended for lower bounds
+amount of solutions to search for, program is closed after (-1 for indefinite)
+======================================================================
+*/
+// RANGE
+const int LOWERBOUND = 23;
+const int HIGHERBOUND = 25;
+const int AMOUNT = 20;
 
+// OUTPUT TO FILE
+const bool OUTPUTTOFILE = true;
+const string OUTPUTFILENAME = "output.txt";
+ofstream outputfile;
+
+/*
+======================================================================
+FILE FORMAT (students.txt)
+======================================================================
+first the list of students, then for each student in the same order their preferences:
+
+student1
+student2
+...
+studentN
+studentx1 studenty1 studentz1
+studentx2 studenty2 studentz2
+...
+studentxN studentyN studentzN
+*/
 
 
 struct student {
@@ -25,6 +76,7 @@ void printVec(vector<student> seating);
 void printVecConvert(vector<student> students, map<int,string> mapping);
 
 int main(int argc, char *argv[]) {
+    int starttime = (int)time(0);
     srand((int)time(0));
     vector<string> names;
     //open file
@@ -34,9 +86,15 @@ int main(int argc, char *argv[]) {
     exit(1);
     }
 
+    //output file
+    if(OUTPUTTOFILE) {
+        outputfile.open("output.txt");
+    }
+
+
     string nextName;
     
-    for(int i = 0; i < 20; i++){
+    for(int i = 0; i < STUDENTS; i++){
         textFile >> nextName;
         names.push_back(nextName);
     }
@@ -44,7 +102,7 @@ int main(int argc, char *argv[]) {
     //establish mapping between name and number (1-20)
     map<int, string> mapping;
     map<string, int> mappingByName;
-    for(int i = 1; i <= 20; i++) {
+    for(int i = 1; i <= STUDENTS; i++) {
         mapping.insert(pair<int, string>(i,names[i-1]));
         mappingByName.insert(pair<string, int>(names[i-1], i));
     }
@@ -59,10 +117,10 @@ int main(int argc, char *argv[]) {
 
     //read in prefs
     vector<student> students;
-    for(int i = 1; i <= 20; ++i) {
+    for(int i = 1; i <= STUDENTS; ++i) {
         vector<int> pref;
         string nextPref;
-        for(int j = 0; j < 3; ++j){
+        for(int j = 0; j < PREFERENCES; ++j){
             textFile >> nextPref;
             auto it = mappingByName.find(nextPref);
 
@@ -79,7 +137,7 @@ int main(int argc, char *argv[]) {
     }
 
 
-    //print students
+    cout << "Students: " << endl;
     for(auto it = students.begin(); it != students.end(); it++){
         
         cout << (*it).name << ":" << '\t' << mapping.find((*it).name)->second << '\t' << "{ ";
@@ -96,7 +154,7 @@ int main(int argc, char *argv[]) {
     vector<student> bestSeating;
     int bestSeatingScore = 0;
     int prevProgress = 0;
-
+    int amount = 0;
     for(int i = 0; i < SHUFFLES; i++) {
         vector<student> newSeating = students;
         shuffle(newSeating.begin(), newSeating.end(), rng);
@@ -122,6 +180,7 @@ int main(int argc, char *argv[]) {
                 newSeating = swapSeating;
                 score = swapScore;
             }
+            
         }
         //check if after swaps found higher score
         if(score > bestSeatingScore) {
@@ -130,23 +189,48 @@ int main(int argc, char *argv[]) {
             bestSeating = newSeating;
             
         }
+        if(score >= LOWERBOUND && score <= HIGHERBOUND) {
+            cout << "Seating found in range: " << score << endl;
+            cout << "with: " << endl;
+            printVecConvert(newSeating, mapping);
+            amount++;
+            if(AMOUNT != -1 && amount >= AMOUNT) {
+                cout << "Specified amount of results has been reached in: " << (int)time(0) - starttime  << "s" << endl;
+                return 0;
+            }
+        }
     }
 
     cout << "Best Seating score found: " << bestSeatingScore << endl;
     cout << "with: " << endl;
     printVecConvert(bestSeating, mapping);
-
+    cout << "Finished after: " << (int)time(0) - starttime  << "s" << endl;
+    if(OUTPUTTOFILE) {
+        outputfile.close();
+    }
     return 0;
 }
 void printVecConvert(vector<student> students, map<int,string> mapping){
+    if(OUTPUTTOFILE){
+        outputfile << "Seating score: " << getSeatingScore(students) << endl;
+        outputfile << "with: " << endl;
+        for(auto it = students.begin(); it != students.end(); it++){
+            outputfile << (*it).name << ":" << '\t' << mapping.find((*it).name)->second << '\t' << "{ ";
+            for (auto it2 = (*it).preferences.begin(); it2 != (*it).preferences.end(); ++it2) { 
+                outputfile << mapping.find((*it2))->second << " ";
+            } 
+            outputfile << "}" << endl;
+        }
+        outputfile << endl << endl;
+    }
     for(auto it = students.begin(); it != students.end(); it++){
-        
         cout << (*it).name << ":" << '\t' << mapping.find((*it).name)->second << '\t' << "{ ";
         for (auto it2 = (*it).preferences.begin(); it2 != (*it).preferences.end(); ++it2) { 
             cout << mapping.find((*it2))->second << " ";
         } 
         cout << "}" << endl;
     }
+    cout << endl << endl;
 }
     
 void printVec(vector<student> seating) {
@@ -167,20 +251,19 @@ int getSeatingScore(vector<student> seating){
         if(*it == right.name) score++;
     }
     //check non-edge
-    for(int i = 1; i <= 18; i++){
+    for(int i = 1; i <= STUDENTS-2; i++){
         left = seating[i-1];
         curr = seating[i];
         right = seating[i+1];
         score += getPreferenceScore(left, curr, right);
     }
     //check right edge
-    left = seating[18];
-    curr = seating[19];
+    left = seating[STUDENTS-2];
+    curr = seating[STUDENTS-1];
 
     for(auto it = curr.preferences.begin(); it != curr.preferences.end(); ++it){
         if(*it == left.name) score++;
     }
-    
     return score;
 }
 
