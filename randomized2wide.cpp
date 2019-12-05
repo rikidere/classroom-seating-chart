@@ -39,7 +39,7 @@ amount of solutions to search for, program is closed after (-1 for indefinite)
 ======================================================================
 */
 // RANGE
-const int LOWERBOUND = 20;
+const int LOWERBOUND = 23;
 const int HIGHERBOUND = 25;
 const int AMOUNT = 20;
 
@@ -72,7 +72,7 @@ struct student {
 };
 
 int getSeatingScore(vector<student> seating);
-int getPreferenceScore(student left, student curr, student right);
+int getPreferenceScore(student left2, student left, student curr, student right, student right2);
 void printVec(vector<student> seating);
 void printVecConvert(vector<student> students, map<int,string> mapping);
 
@@ -190,15 +190,11 @@ int main(int argc, char *argv[]) {
             bestSeating = newSeating;
             
         }
-        if(score >= LOWERBOUND && score <= HIGHERBOUND) {
+        if(score >= LOWERBOUND && score <= HIGHERBOUND && (AMOUNT == -1 || amount < AMOUNT)) {
             cout << "Seating found in range: " << score << endl;
             cout << "with: " << endl;
             printVecConvert(newSeating, mapping);
             amount++;
-            if(AMOUNT != -1 && amount >= AMOUNT) {
-                cout << "Specified amount of results has been reached in: " << (int)time(0) - starttime  << "s" << endl;
-                return 0;
-            }
         }
     }
 
@@ -212,36 +208,6 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 void printVecConvert(vector<student> students, map<int,string> mapping){
-    student left;
-    student curr = students[0];
-    student right = students[1];
-
-    //check left edge
-    for(auto it = curr.preferences.begin(); it != curr.preferences.end(); ++it){
-        if(*it == right.name) {
-            curr.score += 1;
-            students[0] = curr;
-        }
-    }
-    //check non-edge
-    for(int i = 1; i <= STUDENTS-2; i++){
-        left = students[i-1];
-        curr = students[i];
-        right = students[i+1];
-        curr.score += getPreferenceScore(left, curr, right);
-        students[i] = curr;
-    }
-    //check right edge
-    left = students[STUDENTS-2];
-    curr = students[STUDENTS-1];
-
-    for(auto it = curr.preferences.begin(); it != curr.preferences.end(); ++it){
-        if(*it == left.name) {
-            curr.score += 1;
-            students[STUDENTS-1] = curr;
-        } 
-    }
-
     if(OUTPUTTOFILE){
         outputfile << "Seating score: " << getSeatingScore(students) << endl;
         outputfile << "with: " << endl;
@@ -250,7 +216,7 @@ void printVecConvert(vector<student> students, map<int,string> mapping){
             for (auto it2 = (*it).preferences.begin(); it2 != (*it).preferences.end(); ++it2) { 
                 outputfile << mapping.find((*it2))->second << " ";
             } 
-            outputfile << "}  Individual Score: " << (*it).score << endl;
+            outputfile << "}" << endl;
         }
         outputfile << endl << endl;
     }
@@ -259,7 +225,7 @@ void printVecConvert(vector<student> students, map<int,string> mapping){
         for (auto it2 = (*it).preferences.begin(); it2 != (*it).preferences.end(); ++it2) { 
             cout << mapping.find((*it2))->second << " ";
         } 
-        cout << "}  Individual Score: " << (*it).score << endl;
+        cout << "}" << endl;
     }
     cout << endl << endl;
 }
@@ -273,43 +239,66 @@ void printVec(vector<student> seating) {
 
 int getSeatingScore(vector<student> seating){
     int score = 0;
+    student left2;
     student left;
     student curr = seating[0];
     student right = seating[1];
+    student right2 = seating[2];
 
     //check left edge
     for(auto it = curr.preferences.begin(); it != curr.preferences.end(); ++it){
-        if(*it == right.name) {
-            score++;
-            curr.score = 1;
-        }
+        if(*it == right.name) score++;
+        if(*it == right2.name) score++;
+    }
+    left = seating[0];
+    curr = seating[1];
+    right = seating[2];
+    right2 = seating[3];
+    for(auto it = curr.preferences.begin(); it != curr.preferences.end(); ++it){
+        if(*it == right.name) score++;
+        if(*it == left.name) score++;
+        if(*it == right2.name) score++;
     }
     //check non-edge
-    for(int i = 1; i <= STUDENTS-2; i++){
+    for(int i = 2; i <= STUDENTS-3; i++){
+        left2 = seating[i-2];
         left = seating[i-1];
         curr = seating[i];
         right = seating[i+1];
-        curr.score += getPreferenceScore(left, curr, right);
+        right2 = seating[i+2];
+        curr.score += getPreferenceScore(left2, left, curr, right, right2);
         score += curr.score;
     }
     //check right edge
+    left2 = seating[STUDENTS-4];
+    left = seating[STUDENTS-3];
+    curr = seating[STUDENTS-2];
+    right = seating[STUDENTS-1];
+
+    for(auto it = curr.preferences.begin(); it != curr.preferences.end(); ++it){
+        if(*it == right.name) score++;
+        if(*it == left.name) score++;
+        if(*it == left2.name) score++;
+
+    }
+    left2 = seating[STUDENTS-3];
     left = seating[STUDENTS-2];
     curr = seating[STUDENTS-1];
 
     for(auto it = curr.preferences.begin(); it != curr.preferences.end(); ++it){
-        if(*it == left.name) {
-            score++;
-            curr.score = 1;
-        } 
+        if(*it == left.name) score++;
+        if(*it == left2.name) score++;
     }
     return score;
 }
 
-int getPreferenceScore(student left, student curr, student right){
+int getPreferenceScore(student left2, student left, student curr, student right, student right2){
     int score = 0;
     for(auto it = curr.preferences.begin(); it != curr.preferences.end(); ++it){
         if(*it == right.name) score++;
         if(*it == left.name) score++;
+        if(*it == left2.name) score++;
+        if(*it == right2.name) score++;
     }
     return score;
 }
